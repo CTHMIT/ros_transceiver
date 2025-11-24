@@ -82,6 +82,7 @@ tmux new-session -d -s $SESSION_NAME -n "Transceiver"
 
 tmux send-keys -t $SESSION_NAME:0 "cd ${SCRIPT_DIR}" C-m
 tmux send-keys -t $SESSION_NAME:0 "echo 'Starting Zenoh Bridge...'" C-m
+tmux send-keys -t $SESSION_NAME:0 "set -a source "$ENV_FILE" set +a" C-m
 tmux send-keys -t $SESSION_NAME:0 "source /opt/ros/${ROS_DISTRO}/setup.bash" C-m
 tmux send-keys -t $SESSION_NAME:0 "export ROS_DOMAIN_ID=${ROS_DOMAIN_ID}" C-m
 tmux send-keys -t $SESSION_NAME:0 "zenoh-bridge-ros2dds -c ${CONFIG_FILE}" C-m
