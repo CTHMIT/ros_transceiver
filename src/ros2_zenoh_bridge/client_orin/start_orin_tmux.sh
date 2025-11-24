@@ -67,7 +67,7 @@ tmux send-keys -t $SESSION_NAME:0 "source /opt/ros/${ROS_DISTRO}/setup.bash" C-m
 tmux send-keys -t $SESSION_NAME:0 "export ROS_DOMAIN_ID=${ROS_DOMAIN_ID}" C-m
 tmux send-keys -t $SESSION_NAME:0 "zenoh-bridge-ros2dds -c ${CONFIG_FILE}" C-m
 
-tmux split-window -h -t $SESSION_NAME:0
+tmux split-window -v -t $SESSION_NAME:0
 
 tmux send-keys -t $SESSION_NAME:0.1 "echo 'Waiting for bridge...'" C-m
 tmux send-keys -t $SESSION_NAME:0.1 "sleep 3" C-m
