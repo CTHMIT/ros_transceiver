@@ -1,10 +1,10 @@
 {
   mode: "client",
-  connect: { endpoints: ["tcp/10.28.134.82:7447"] },
+  connect: { endpoints: [${ZENOH_CONNECT_ENDPOINT}] },
 
   plugins: {
     ros2dds: {
-      domain: 180,
+      domain: ${ROS_DOMAIN_ID},
       allow: {
         publishers: [
           "^/tf$",
