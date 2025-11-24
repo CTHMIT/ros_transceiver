@@ -63,17 +63,23 @@ if tmux has-session -t $SESSION_NAME 2>/dev/null; then
 fi
 
 tmux new-session -d -s $SESSION_NAME -n "Bridge"
-tmux send-keys -t $SESSION_NAME:0 "cd ${SCRIPT_DIR}" C-m
-tmux send-keys -t $SESSION_NAME:0 "echo 'Starting Zenoh Bridge...'" C-m
-tmux send-keys -t $SESSION_NAME:0 "zenoh-bridge-ros2dds -c ${CONFIG_FILE}" C-m
+tmux send-keys -t $SESSION_NAME:0 "echo 'Starting Isaac Ros Nvblox...'" C-m
+tmux send-keys -t $SESSION_NAME:0 "IsaacRos" C-m
+tmux send-keys -t $SESSION_NAME:0 "source /opt/ros/${ROS_DISTRO}/setup.bash" C-m
+tmux send-keys -t $SESSION_NAME:0 "export ROS_DOMAIN_ID=${ROS_DOMAIN_ID}" C-m
+tmux send-keys -t $SESSION_NAME:0 "source install/setup.bash" C-m
+tmux send-keys -t $SESSION_NAME:0 "ros2 launch nvblox_examples_bringup realsense_example.launch.py enable_accel:=false enable_gyro:=false run_rviz:=false" C-m
+
 
 tmux split-window -v -t $SESSION_NAME:0
+tmux send-keys -t $SESSION_NAME:0.1 "echo 'Waiting for Nvblox to initialize...'" C-m
+tmux send-keys -t $SESSION_NAME:0.1 "sleep 10" C-m
+tmux send-keys -t $SESSION_NAME:0.1 "cd ${SCRIPT_DIR}" C-m
+tmux send-keys -t $SESSION_NAME:0.1 "echo 'Starting Zenoh Bridge...'" C-m
+tmux send-keys -t $SESSION_NAME:0.1 "source /opt/ros/${ROS_DISTRO}/setup.bash" C-m
+tmux send-keys -t $SESSION_NAME:0.1 "export ROS_DOMAIN_ID=${ROS_DOMAIN_ID}" C-m
+tmux send-keys -t $SESSION_NAME:0.1 "zenoh-bridge-ros2dds -c ${CONFIG_FILE}" C-m
 
-tmux send-keys -t $SESSION_NAME:0.1 "echo 'Waiting for bridge to initialize...'" C-m
-tmux send-keys -t $SESSION_NAME:0.1 "sleep 5" C-m
-tmux send-keys -t $SESSION_NAME:0.1 "IsaacRos" C-m
-tmux send-keys -t $SESSION_NAME:0.1 "source install/setup.bash" C-m
-tmux send-keys -t $SESSION_NAME:0.1 "ros2 launch nvblox_examples_bringup realsense_example.launch.py run_rviz:=false" C-m
 
 tmux select-pane -t $SESSION_NAME:0.0
 

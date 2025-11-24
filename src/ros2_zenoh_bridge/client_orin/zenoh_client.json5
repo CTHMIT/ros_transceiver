@@ -14,14 +14,10 @@
           "^/nvblox_node/color_layer$",
           "^/nvblox_node/workspace_bounds$",
           "^/nvblox_node/static_esdf_pointcloud$",
-          "^/camera0/color/image_raw$",
-          "^/camera0/realsense_splitter_node/output/depth$",
-
           "^/nvblox_node/mesh$",
           "^/nvblox_node/esdf_slice_bounds$",
           "^/nvblox_node/back_projected_depth/camera_depth_optical_frame$",
-          "^/visual_slam/vis/observations_cloud$",
-          
+          "^/visual_slam/vis/observations_cloud$",          
           "^/initialpose$",
           "^/goal_pose$",
           "^/clicked_point$",
