@@ -20,6 +20,47 @@ if [ ! -f "$ENV_FILE" ]; then
     exit 1
 fi
 
+
+# Function to check and install Zenoh Bridge
+check_and_install_zenoh() {
+    if ! command -v zenoh-bridge-ros2dds &> /dev/null; then
+        echo "zenoh-bridge-ros2dds not found. Installing..."
+        
+        # Add Eclipse Zenoh repository
+        echo "deb [trusted=yes] https://download.eclipse.org/zenoh/debian-repo/ /" | sudo tee -a /etc/apt/sources.list > /dev/null
+        sudo apt-get update
+        
+        # Install bridge and dependencies
+        sudo apt-get install -y zenoh-bridge-ros2dds gettext-base
+        
+        if ! command -v zenoh-bridge-ros2dds &> /dev/null; then
+            echo "Error: Failed to install zenoh-bridge-ros2dds."
+            exit 1
+        fi
+        echo "zenoh-bridge-ros2dds installed successfully."
+    else
+        echo "zenoh-bridge-ros2dds is already installed."
+    fi
+}
+
+# Check and install before starting tmux
+check_and_install_zenoh
+
+# Generate configuration
+CONFIG_TEMPLATE="${SCRIPT_DIR}/zenoh_client.json5"
+CONFIG_FILE="/tmp/zenoh_client.json5"
+
+if [ -f "$CONFIG_TEMPLATE" ]; then
+    # Load env vars for substitution
+    set -a
+    source "$ENV_FILE"
+    set +a
+    envsubst < "$CONFIG_TEMPLATE" > "$CONFIG_FILE"
+else
+    echo "Error: Config template not found at $CONFIG_TEMPLATE"
+    exit 1
+fi
+
 SESSION_NAME="ros2_bridge"
 
 if tmux has-session -t $SESSION_NAME 2>/dev/null; then
@@ -30,7 +71,7 @@ fi
 tmux new-session -d -s $SESSION_NAME -n "Bridge"
 tmux send-keys -t $SESSION_NAME:0 "cd ${SCRIPT_DIR}" C-m
 tmux send-keys -t $SESSION_NAME:0 "echo 'Starting Zenoh Bridge...'" C-m
-tmux send-keys -t $SESSION_NAME:0 "docker compose -f ${SCRIPT_DIR}/docker-compose.yml up --build" C-m
+tmux send-keys -t $SESSION_NAME:0 "zenoh-bridge-ros2dds -c ${CONFIG_FILE}" C-m
 
 tmux split-window -v -t $SESSION_NAME:0
 
