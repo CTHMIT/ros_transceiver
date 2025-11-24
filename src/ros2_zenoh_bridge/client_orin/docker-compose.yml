@@ -6,7 +6,7 @@ services:
       dockerfile: client_orin/Dockerfile
     image: ros2-zenoh-bridge-client
     container_name: ros2-zenoh-bridge-client
-    network_mode: "host" # Use host networking for best performance and access to ROS 2 interfaces
+    network_mode: "host"
     restart: unless-stopped
     volumes:
       - ./zenoh_client.json5:/etc/zenoh/zenoh_config.json5.template
