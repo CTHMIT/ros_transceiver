@@ -2,12 +2,15 @@
   mode: "client",
   connect: {
     endpoints: [
-      "tcp/10.28.134.82:7447"
+      // Use the placeholder so .env controls this
+      "${ZENOH_CONNECT_ENDPOINT}"
     ]
   },
   listen: {
     endpoints: [
-      "tcp/0.0.0.0:7447"
+      // Use 0 to let the OS pick a random free port. 
+      // Hardcoding 7447 here causes "Address in use" errors if you run Server & Client on one machine.
+      "tcp/0.0.0.0:0"
     ]
   },
   plugins: {
@@ -36,7 +39,10 @@
         publishers: {
           ".*": {
             reliability: "reliable",
-            history: "keep_all"
+            // CRITICAL FIX: "keep_all" causes massive latency with cameras/lidars if network drops.
+            // "keep_last" with depth 1 ensures you always get the latest frame.
+            history: "keep_last",
+            depth: 1
           }
         }
       },
