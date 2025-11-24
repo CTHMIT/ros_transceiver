@@ -1,0 +1,24 @@
+{
+  mode: "router",
+  listen: {
+    endpoints: [
+      "${ZENOH_LISTEN_ENDPOINT}"
+    ]
+  },
+  plugins: {
+    ros2dds: {
+      domain: 161,
+      qos: {
+        publishers: {
+          ".*": {
+            reliability: "reliable",
+            history: "keep_all"
+          }
+        }
+      },
+      discovery: {
+        enabled: true
+      }
+    }
+  }
+}

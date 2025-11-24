@@ -1,0 +1,4 @@
+FROM alpine
+COPY client_orin/zenoh_client.json5 /tmp/
+COPY common/entrypoint.sh /tmp/
+RUN ls -l /tmp/entrypoint.sh

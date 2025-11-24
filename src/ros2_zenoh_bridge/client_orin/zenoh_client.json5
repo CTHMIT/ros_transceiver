@@ -1,0 +1,48 @@
+{
+  mode: "client",
+  connect: {
+    endpoints: [
+      "${ZENOH_CONNECT_ENDPOINT}"
+    ]
+  },
+  listen: {
+    endpoints: [
+      "${ZENOH_LISTEN_ENDPOINT}"
+    ]
+  },
+  plugins: {
+    ros2dds: {
+      domain: 161,
+      allow: {
+        publishers: [
+          "^/tf$",
+          "^/tf_static$",
+          "^/rosout$",
+          "^/nvblox_node/mesh$",
+          "^/visual_slam/tracking/odometry$",
+          "^/nvblox_node/color_layer$",
+          "^/nvblox_node/esdf_slice_bounds$",
+          "^/nvblox_node/workspace_bounds$",
+          "^/nvblox_node/static_esdf_pointcloud$",
+          "^/visual_slam/vis/observations_cloud$",
+          "^/camera0/realsense_splitter_node/output/depth$",
+          "^/nvblox_node/back_projected_depth/camera_depth_optical_frame$",
+          "^/initialpose$",
+          "^/goal_pose$",
+          "^/clicked_point$"
+        ],
+      },
+      qos: {
+        publishers: {
+          ".*": {
+            reliability: "reliable",
+            history: "keep_all"
+          }
+        }
+      },
+      discovery: {
+        enabled: true
+      }
+    }
+  }
+}
