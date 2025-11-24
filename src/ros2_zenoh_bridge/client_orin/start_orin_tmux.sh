@@ -21,16 +21,13 @@ if [ ! -f "$ENV_FILE" ]; then
 fi
 
 
-# Function to check and install Zenoh Bridge
 check_and_install_zenoh() {
     if ! command -v zenoh-bridge-ros2dds &> /dev/null; then
         echo "zenoh-bridge-ros2dds not found. Installing..."
         
-        # Add Eclipse Zenoh repository
         echo "deb [trusted=yes] https://download.eclipse.org/zenoh/debian-repo/ /" | sudo tee -a /etc/apt/sources.list > /dev/null
         sudo apt-get update
         
-        # Install bridge and dependencies
         sudo apt-get install -y zenoh-bridge-ros2dds gettext-base
         
         if ! command -v zenoh-bridge-ros2dds &> /dev/null; then
@@ -43,15 +40,12 @@ check_and_install_zenoh() {
     fi
 }
 
-# Check and install before starting tmux
 check_and_install_zenoh
 
-# Generate configuration
 CONFIG_TEMPLATE="${SCRIPT_DIR}/zenoh_client.json5"
 CONFIG_FILE="/tmp/zenoh_client.json5"
 
 if [ -f "$CONFIG_TEMPLATE" ]; then
-    # Load env vars for substitution
     set -a
     source "$ENV_FILE"
     set +a
