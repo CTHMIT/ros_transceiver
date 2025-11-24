@@ -1,5 +1,26 @@
 #!/bin/bash
 
+SESSION_NAME="ros2_transceiver"
+CONFIG_FILE="/tmp/zenoh_client.json5"
+
+cleanup() {
+    echo ""
+    echo "Cleaning up..."
+    
+    if tmux has-session -t "$SESSION_NAME" 2>/dev/null; then
+        tmux kill-session -t "$SESSION_NAME"
+        echo "Already deleted Tmux Session: $SESSION_NAME and all background processes."
+    fi
+    if [ -f "$CONFIG_FILE" ]; then
+        rm -f "$CONFIG_FILE"
+        echo "Already deleted tmp config file: $CONFIG_FILE"
+    fi
+    
+    echo "Cleanup completed."
+}
+
+trap cleanup EXIT INT TERM
+
 if ! command -v tmux &> /dev/null; then
     echo "Error: tmux is not installed. Please install it:"
     echo "sudo apt-get update && sudo apt-get install -y tmux"
@@ -39,7 +60,6 @@ check_and_install_zenoh() {
 check_and_install_zenoh
 
 CONFIG_TEMPLATE="${SCRIPT_DIR}/zenoh_client.json5"
-CONFIG_FILE="/tmp/zenoh_client.json5"
 
 if [ -f "$CONFIG_TEMPLATE" ]; then
     set -a
@@ -51,7 +71,6 @@ else
     exit 1
 fi
 
-SESSION_NAME="ros2_transceiver"
 ROS_DISTRO=${ROS_DISTRO:-humble}
 
 if tmux has-session -t $SESSION_NAME 2>/dev/null; then
@@ -79,4 +98,5 @@ tmux send-keys -t $SESSION_NAME:0.1 "source install/setup.bash" C-m
 tmux send-keys -t $SESSION_NAME:0.1 "ros2 launch nvblox_examples_bringup realsense_example.launch.py run_rviz:=false layer_streamer_bandwidth_limit_mbps:=10.0 enable_accel:=false enable_gyro:=false" C-m
 
 tmux select-pane -t $SESSION_NAME:0.0
+
 tmux attach-session -t $SESSION_NAME

@@ -1,7 +1,6 @@
 #!/bin/bash
 echo "Starting ROS 2 Zenoh Bridge Server on PC..."
 
-# Check for .env file
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ENV_FILE="${SCRIPT_DIR}/../../../config/.env"
 if [ ! -f "$ENV_FILE" ]; then
@@ -10,7 +9,12 @@ if [ ! -f "$ENV_FILE" ]; then
     exit 1
 fi
 
-cd "$SCRIPT_DIR"
-docker compose up -d --build
-echo "Bridge started. Logs:"
-docker compose logs -f
+
+set -a
+source "$ENV_FILE"
+set +a
+
+echo 'Starting Zenoh Bridge...'
+source /opt/ros/${ROS_DISTRO}/setup.bash
+export ROS_DOMAIN_ID=${ROS_DOMAIN_ID}
+zenoh-bridge-ros2dds -c ${CONFIG_FILE}
