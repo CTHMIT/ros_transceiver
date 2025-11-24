@@ -96,7 +96,7 @@ tmux send-keys -t $SESSION_NAME:0.1 "IsaacRos" C-m
 tmux send-keys -t $SESSION_NAME:0.1 "source /opt/ros/${ROS_DISTRO}/setup.bash" C-m
 tmux send-keys -t $SESSION_NAME:0.1 "export ROS_DOMAIN_ID=${ROS_DOMAIN_ID}" C-m
 tmux send-keys -t $SESSION_NAME:0.1 "source install/setup.bash" C-m
-tmux send-keys -t $SESSION_NAME:0.1 "ros2 launch nvblox_examples_bringup realsense_example.launch.py run_rviz:=false layer_streamer_bandwidth_limit_mbps:=10.0 enable_accel:=false enable_gyro:=false" C-m
+tmux send-keys -t $SESSION_NAME:0.1 "ros2 launch nvblox_examples_bringup realsense_example.launch.py run_rviz:=false layer_streamer_bandwidth_limit_mbps:=30.0 enable_accel:=false enable_gyro:=false" C-m
 
 tmux select-pane -t $SESSION_NAME:0.0
 
