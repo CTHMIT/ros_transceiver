@@ -14,8 +14,8 @@ RUN curl -L -o /tmp/zenoh-bridge-ros2dds.zip https://github.com/eclipse-zenoh/ze
 
 WORKDIR /workspace
 
-COPY ros_transceiver/src/ros2_zenoh_bridge/client_orin/zenoh_client.json5 /etc/zenoh/zenoh_config.json5.template
-COPY ros_transceiver/src/ros2_zenoh_bridge/common/entrypoint.sh /entrypoint.sh
+COPY client_orin/zenoh_client.json5 /etc/zenoh/zenoh_config.json5.template
+COPY common/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 # Set the entrypoint
