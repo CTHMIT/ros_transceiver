@@ -15,6 +15,7 @@
           "^/nvblox_node/workspace_bounds$",
           "^/nvblox_node/static_esdf_pointcloud$",
           "^/nvblox_node/mesh$",
+          "^/nvblox_node/tsdf_layer$",
           "^/nvblox_node/esdf_slice_bounds$",
           "^/nvblox_node/back_projected_depth/camera_depth_optical_frame$",
           "^/visual_slam/vis/observations_cloud$",          
