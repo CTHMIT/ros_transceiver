@@ -9,7 +9,7 @@
 
   plugins: {
     ros2dds: {
-      domain: 180,
+      domain: ${ROS_DOMAIN_ID},
     }
   }
 }
