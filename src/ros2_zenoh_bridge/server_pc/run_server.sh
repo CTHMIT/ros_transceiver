@@ -1,72 +1,102 @@
-#!/bin/bash
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ENV_FILE="${SCRIPT_DIR}/../../../config/.env"
-CONFIG_TEMPLATE="${SCRIPT_DIR}/zenoh_server.json5"
+SESSION_NAME="ros2_transceiver"
 CONFIG_FILE="/tmp/zenoh_server.json5"
-ROS_DISTRO=${ROS_DISTRO:-humble}  
-
-echo "----------------------------------------------------------------"
-echo "Starting ROS 2 Zenoh Bridge Server (PC)..."
-echo "----------------------------------------------------------------"
 
 cleanup() {
     echo ""
-    echo ">>> Performing safe shutdown..."
+    echo "Cleaning up..."
     
+    if tmux has-session -t "$SESSION_NAME" 2>/dev/null; then
+        tmux kill-session -t "$SESSION_NAME"
+        echo "Already deleted Tmux Session: $SESSION_NAME and all background processes."
+    fi
     if [ -f "$CONFIG_FILE" ]; then
         rm -f "$CONFIG_FILE"
-        echo " [OK] Removed temporary config file: $CONFIG_FILE"
+        echo "Already deleted tmp config file: $CONFIG_FILE"
     fi
     
-    echo ">>> Server stopped safely."
+    echo "Cleanup completed."
 }
+
 trap cleanup EXIT INT TERM
 
+if ! command -v tmux &> /dev/null; then
+    echo "Error: tmux is not installed. Please install it:"
+    echo "sudo apt-get update && sudo apt-get install -y tmux"
+    exit 1
+fi
+
+if [ -z "$ISAAC_ROS_WS" ]; then
+    echo "Error: ISAAC_ROS_WS environment variable is not defined."
+    echo "Please source your Isaac ROS workspace setup script."
+    exit 1
+fi
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ENV_FILE="${SCRIPT_DIR}/../../../config/.env"
 if [ ! -f "$ENV_FILE" ]; then
-    echo " [Error] Configuration file not found: $ENV_FILE"
-    echo " Please verify the path or copy config/.env.example to config/.env."
+    echo "Error: Configuration file not found at $ENV_FILE"
+    echo "Please copy config/.env.example to config/.env and configure it."
     exit 1
 fi
 
-if [ ! -f "$CONFIG_TEMPLATE" ]; then
-    echo " [Error] Zenoh config template not found: $CONFIG_TEMPLATE"
-    exit 1
-fi
+check_and_install_zenoh() {
+    if ! command -v zenoh-bridge-ros2dds &> /dev/null; then
+        echo "zenoh-bridge-ros2dds not found. Installing..."
+        echo "deb [trusted=yes] https://download.eclipse.org/zenoh/debian-repo/ /" | sudo tee -a /etc/apt/sources.list > /dev/null
+        sudo apt-get update
+        sudo apt-get install -y zenoh-bridge-ros2dds gettext-base
+        
+        if ! command -v zenoh-bridge-ros2dds &> /dev/null; then
+            echo "Error: Failed to install zenoh-bridge-ros2dds."
+            exit 1
+        fi
+        echo "zenoh-bridge-ros2dds installed successfully."
+    else
+        echo "zenoh-bridge-ros2dds is already installed."
+    fi
+}
+check_and_install_zenoh
 
-if ! command -v zenoh-bridge-ros2dds &> /dev/null; then
-    echo " [Error] zenoh-bridge-ros2dds command not found."
-    echo " Please install it using the following commands:"
-    echo " echo 'deb [trusted=yes] https://download.eclipse.org/zenoh/debian-repo/ /' | sudo tee -a /etc/apt/sources.list > /dev/null"
-    echo " sudo apt-get update && sudo apt-get install -y zenoh-bridge-ros2dds"
-    exit 1
-fi
+CONFIG_TEMPLATE="${SCRIPT_DIR}/zenoh_server.json5"
 
-set -a
-source "$ENV_FILE"
-set +a
-
-echo " [Info] ROS Distro: $ROS_DISTRO"
-echo " [Info] ROS Domain ID: ${ROS_DOMAIN_ID}"
-echo " [Info] Listen Endpoint: ${ZENOH_LISTEN_ENDPOINT}"
-
-if [ -f "/opt/ros/${ROS_DISTRO}/setup.bash" ]; then
-    source "/opt/ros/${ROS_DISTRO}/setup.bash"
+if [ -f "$CONFIG_TEMPLATE" ]; then
+    set -a
+    source "$ENV_FILE"
+    set +a
+    envsubst < "$CONFIG_TEMPLATE" > "$CONFIG_FILE"
 else
-    echo " [Warning] Could not find /opt/ros/${ROS_DISTRO}/setup.bash. Assuming you sourced it manually."
-fi
-
-export ROS_DOMAIN_ID=${ROS_DOMAIN_ID}
-
-envsubst < "$CONFIG_TEMPLATE" > "$CONFIG_FILE"
-
-if [ ! -s "$CONFIG_FILE" ]; then
-    echo " [Error] Failed to generate config file (file is empty). Please check if 'envsubst' is installed (sudo apt install gettext-base)."
+    echo "Error: Config template not found at $CONFIG_TEMPLATE"
     exit 1
 fi
 
-echo "----------------------------------------------------------------"
-echo "Startup successful! Press Ctrl+C to exit safely."
-echo "----------------------------------------------------------------"
+ROS_DISTRO=${ROS_DISTRO:-humble}
 
-zenoh-bridge-ros2dds -c "$CONFIG_FILE"
+if tmux has-session -t $SESSION_NAME 2>/dev/null; then
+    echo "Session $SESSION_NAME already exists. Killing it..."
+    tmux kill-session -t $SESSION_NAME
+fi
+
+tmux new-session -d -s $SESSION_NAME -n "Receiver"
+
+tmux send-keys -t $SESSION_NAME:0 "cd ${SCRIPT_DIR}" C-m
+tmux send-keys -t $SESSION_NAME:0 "echo 'Starting Zenoh Bridge...'" C-m
+tmux send-keys -t $SESSION_NAME:0 "set -a source "$ENV_FILE" set +a" C-m
+tmux send-keys -t $SESSION_NAME:0 "source /opt/ros/${ROS_DISTRO}/setup.bash" C-m
+tmux send-keys -t $SESSION_NAME:0 "export ROS_DOMAIN_ID=${ROS_DOMAIN_ID}" C-m
+tmux send-keys -t $SESSION_NAME:0 "zenoh-bridge-ros2dds -c ${CONFIG_FILE}" C-m
+
+tmux split-window -v -t $SESSION_NAME:0
+
+tmux send-keys -t $SESSION_NAME:0.1 "echo 'Waiting for bridge...'" C-m
+tmux send-keys -t $SESSION_NAME:0.1 "sleep 3" C-m
+tmux send-keys -t $SESSION_NAME:0.1 "echo 'Starting Isaac Ros Nvblox...'" C-m
+tmux send-keys -t $SESSION_NAME:0.1 "IsaacRos" C-m
+tmux send-keys -t $SESSION_NAME:0.1 "source /opt/ros/${ROS_DISTRO}/setup.bash" C-m
+tmux send-keys -t $SESSION_NAME:0.1 "export ROS_DOMAIN_ID=${ROS_DOMAIN_ID}" C-m
+tmux send-keys -t $SESSION_NAME:0.1 "source install/setup.bash" C-m
+tmux send-keys -t $SESSION_NAME:0.1 "ros2 launch nvblox_examples_bringup visualization.launch.py " C-m
+
+tmux select-pane -t $SESSION_NAME:0.0
+
+tmux attach-session -t $SESSION_NAME

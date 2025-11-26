@@ -78,7 +78,7 @@ if tmux has-session -t $SESSION_NAME 2>/dev/null; then
     tmux kill-session -t $SESSION_NAME
 fi
 
-tmux new-session -d -s $SESSION_NAME -n "Transceiver"
+tmux new-session -d -s $SESSION_NAME -n "Transmitter"
 
 tmux send-keys -t $SESSION_NAME:0 "cd ${SCRIPT_DIR}" C-m
 tmux send-keys -t $SESSION_NAME:0 "echo 'Starting Zenoh Bridge...'" C-m
